@@ -43,8 +43,7 @@ class MockObjectStore():
                         object_name: str,
                         filename: str,
                         overwrite: bool = False):
-        dirname = os.path.dirname(filename)
-        if dirname:
+        if dirname := os.path.dirname(filename):
             os.makedirs(dirname, exist_ok=True)
         with open(
                 os.path.join(self.remote_folder, os.path.basename(object_name)),
@@ -65,8 +64,8 @@ def _call_convert_text_to_mds(processes: int, tokenizer_name: str,
                               concat_tokens: int) -> None:
     convert_text_to_mds(
         tokenizer_name=tokenizer_name,
-        output_folder=f's3://fake-test-output-path',
-        input_folder=f's3://fake-test-input-path',
+        output_folder='s3://fake-test-output-path',
+        input_folder='s3://fake-test-input-path',
         concat_tokens=concat_tokens,
         eos_text='',
         bos_text='',
@@ -125,11 +124,10 @@ def test_single_and_multi_process(merge_shard_groups: Mock,
     if processes > 1:
         merge_shard_groups.assert_called_once()
 
-    total_object_names = 0
-    for call_args in download_and_convert.call_args_list:
-        object_names = call_args[0][0]
-        total_object_names += len(object_names)
-
+    total_object_names = sum(
+        len(call_args[0][0])
+        for call_args in download_and_convert.call_args_list
+    )
     assert total_object_names == n_text_files  # We should have processed all the text files
 
     # Check that correct output files exist
@@ -169,10 +167,10 @@ def test_single_and_multi_process(merge_shard_groups: Mock,
     files_per_process[
         0] += n_text_files % processes  # Give one of the processes the remainder
     # expected number of tokens accounts for last tokens dropped by ConcatTokensDataset
-    expected_n_tokens = sum([
+    expected_n_tokens = sum(
         ((n_files * tokens_per_file) // concat_tokens) * concat_tokens
         for n_files in files_per_process
-    ])
+    )
 
     dataset = StreamingDataset(local=remote_folder, num_canonical_nodes=1)
     n_tokens = 0

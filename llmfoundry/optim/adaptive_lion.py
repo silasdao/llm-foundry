@@ -61,7 +61,7 @@ class DecoupledAdaLRLion(Optimizer):
                  min_scale: float = 1e-4):
         if lr <= 0.:
             raise Exception(f'Invalid LR: {lr}. LR must be > 0')
-        if not all([0. <= beta <= 1. for beta in betas]):
+        if not all(0.0 <= beta <= 1.0 for beta in betas):
             raise Exception(
                 f'Invalid beta values: {betas} All betas must be between 0 and 1.'
             )
@@ -174,9 +174,8 @@ class DecoupledAdaLRLion(Optimizer):
         return loss
 
     def dist_reduce_metrics(self, optimizer_metrics: Dict[str, torch.Tensor]):
-        for metric in optimizer_metrics:
+        for metric, reduced in optimizer_metrics.items():
             if metric.startswith('l2_norm'):
-                reduced = optimizer_metrics[metric]
                 if dist.get_world_size() > 1:
                     dist.all_reduce(reduced, reduce_operation='SUM')
 
@@ -279,7 +278,7 @@ class DecoupledClipLion(Optimizer):
                  outlier_threshold: float = 5.0):
         if lr <= 0.:
             raise Exception(f'Invalid LR: {lr}. LR must be > 0')
-        if not all([0. <= beta <= 1. for beta in betas]):
+        if not all(0.0 <= beta <= 1.0 for beta in betas):
             raise Exception(
                 f'Invalid beta values: {betas} All betas must be between 0 and 1.'
             )

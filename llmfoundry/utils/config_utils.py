@@ -29,13 +29,13 @@ def pop_config(cfg: DictConfig,
     """
     value = cfg.pop(key, None)
     if value is not None and convert:
-        if not isinstance(value, DictConfig) and not isinstance(
-                value, ListConfig):
+        if isinstance(value, (DictConfig, ListConfig)):
+            return om.to_container(value)
+        else:
             raise ValueError(
                 f'The key {key} has a value of type {type(value)} that cannot be \
                             converted to a dict or list. Please check your yaml.'
             )
-        return om.to_container(value)
     elif value is not None:
         return value
     elif must_exist:
@@ -61,8 +61,7 @@ def calculate_batch_size_info(
     elif isinstance(device_microbatch_size, int):
         if device_microbatch_size > device_batch_size:
             log.warn(
-                f'device_microbatch_size > device_batch_size, ' +
-                f'will be reduced from {device_microbatch_size} -> {device_batch_size}.'
+                f'device_microbatch_size > device_batch_size, will be reduced from {device_microbatch_size} -> {device_batch_size}.'
             )
             device_microbatch_size = device_batch_size
         device_grad_accum = math.ceil(device_batch_size /

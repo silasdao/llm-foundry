@@ -111,17 +111,14 @@ class ComposerHFCausalLM(HuggingFaceModelWithZLoss):
                 attr = getattr(config, k)
                 # attempt to disallow typos in nested configs
                 if isinstance(attr, Mapping):
-                    extra_keys = [
+                    if extra_keys := [
                         _k for _k in v.keys() if _k not in attr.keys()
-                    ]
-                    if extra_keys:
+                    ]:
                         raise ValueError(
-                            f'Config dict override got unknown keys. ' +
-                            f'Extra keys: {extra_keys}. ' +
-                            f'Expected (a subset of) keys: {list(attr.keys())}.'
+                            f'Config dict override got unknown keys. Extra keys: {extra_keys}. '
+                            + f'Expected (a subset of) keys: {list(attr.keys())}.'
                         )
                     getattr(config, k).update(v)
-                # necessary case to allow for rope_scaling to be overriden in llama config
                 elif attr is None and isinstance(v, Mapping):
                     setattr(config, k, {})
                     getattr(config, k).update(v)
@@ -199,29 +196,27 @@ class ComposerHFCausalLM(HuggingFaceModelWithZLoss):
                     f'Patching llama attention with {attention_patch_type} attention'
                 )
                 from transformers.models.llama.modeling_llama import \
-                    LlamaAttention
+                        LlamaAttention
                 LlamaAttention.forward = get_llama_attention_patch_fn(
                     attention_patch_type)
                 model.config.use_cache = False
 
-        # elif the model is either a PeftModel or a PreTrainedModel
         elif isinstance(om_model_config, model_types):
             model = om_model_config
             init_device = 'cpu'
             z_loss = 0.0
 
-        # else, unsupported type
         else:
             raise ValueError(
                 f'om_model_config must be either a DictConfig, PeftModel, or PreTrainedModel, but got {type(om_model_config)}'
             )
 
-        composer_model = super().__init__(model=model,
-                                          shift_labels=True,
-                                          tokenizer=tokenizer,
-                                          metrics=train_metrics,
-                                          eval_metrics=eval_metrics,
-                                          z_loss=z_loss,
-                                          init_device=init_device)
-
-        return composer_model
+        return super().__init__(
+            model=model,
+            shift_labels=True,
+            tokenizer=tokenizer,
+            metrics=train_metrics,
+            eval_metrics=eval_metrics,
+            z_loss=z_loss,
+            init_device=init_device,
+        )

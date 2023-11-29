@@ -143,7 +143,7 @@ class StreamingFinetuningDataset(StreamingDataset):
                  batching_method: str = 'random',
                  **kwargs: Any):
 
-        if len(kwargs) > 0:
+        if kwargs:
             raise ValueError(
                 f'StreamingFinetuningDataset() got an unexpected keyword argument: {kwargs}'
             )
@@ -324,8 +324,7 @@ class DatasetConstructor:
         split = cfg.split.replace('-', '_')
         kwargs = cfg.get('hf_kwargs', {})
         proto_preprocessing_fn = cfg.get('preprocessing_fn')
-        if isinstance(proto_preprocessing_fn, dict) or isinstance(
-                proto_preprocessing_fn, DictConfig):
+        if isinstance(proto_preprocessing_fn, (dict, DictConfig)):
             preprocessing_fn = self.get_preprocessing_fn_from_dict(
                 proto_preprocessing_fn)
         else:
@@ -426,7 +425,7 @@ def muennighoff_tokenize_function(inp: Dict) -> Dict[str, str]:
         transitions = (' ', '\n', '\t')
         if not (prompt.endswith(transitions) or
                 response.startswith(transitions)):
-            response = ' ' + response
+            response = f' {response}'
     except Exception as e:
         raise ValueError(
             f'Unable to process prompt/response from {inp=}') from e

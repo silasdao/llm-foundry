@@ -467,7 +467,7 @@ def main():
         torch.cuda.synchronize()
         time_elapsed = timeit.default_timer() - time
         if rank == 0:
-            print(f'[INFO] MPT time costs:')
+            print('[INFO] MPT time costs:')
             print(
                 'model_name, gpu_type, gpu_count, batch_size, input_tokens, output_tokens, latency_ms'
             )

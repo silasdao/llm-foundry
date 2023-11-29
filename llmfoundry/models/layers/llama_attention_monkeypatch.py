@@ -163,10 +163,10 @@ def llama_attention_patch_torch(
         o_proj_slices = self.o_proj.weight.split(self.hidden_size //
                                                  self.config.pretraining_tp,
                                                  dim=1)
-        attn_output = sum([
+        attn_output = sum(
             F.linear(attn_output[i], o_proj_slices[i])
             for i in range(self.config.pretraining_tp)
-        ])
+        )
     else:
         attn_output = self.o_proj(attn_output)
 
@@ -275,10 +275,10 @@ def llama_attention_patch_triton(
         o_proj_slices = self.o_proj.weight.split(self.hidden_size //
                                                  self.config.pretraining_tp,
                                                  dim=1)
-        attn_output = sum([
+        attn_output = sum(
             F.linear(attn_output[i], o_proj_slices[i])
             for i in range(self.config.pretraining_tp)
-        ])
+        )
     else:
         attn_output = self.o_proj(attn_output)
 

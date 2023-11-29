@@ -186,7 +186,7 @@ def test_denoising_dataloader(decoder_only_format: bool, pretokenize: bool,
     path = get_abs_data_path(data_local)
     max_seq_len = 256 if decoder_only_format else 128
 
-    if (decoder_only_format is False) and (packing_ratio is not None):
+    if not decoder_only_format and packing_ratio is not None:
         pytest.xfail('packing_ratio only supported for decoder-only format.')
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -251,7 +251,7 @@ def test_finetuning_dataloader(decoder_only_format: bool,
     tokenizer_name = 'gpt2' if decoder_only_format else 't5-base'
     max_seq_len = 2048 if decoder_only_format else 1024
 
-    if (decoder_only_format is False) and (packing_ratio is not None):
+    if not decoder_only_format and packing_ratio is not None:
         pytest.xfail('packing_ratio only supported for decoder-only format.')
 
     cfg = {
@@ -547,8 +547,5 @@ def test_malformed_data(
         # +5 because we added samples with just bos/eos in each of prompt/response
         expected_num_batches = (dataset_size + 5) // device_batch_size
 
-        actual_num_batches = 0
-        for _ in dl:
-            actual_num_batches += 1
-
+        actual_num_batches = sum(1 for _ in dl)
         assert actual_num_batches == expected_num_batches

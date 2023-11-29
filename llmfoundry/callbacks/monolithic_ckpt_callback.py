@@ -78,8 +78,7 @@ class MonolithicCheckpointSaver(Callback):
             assert isinstance(temp_save_dir, str)
 
             save_path = str(Path(temp_save_dir) / Path(filename))
-            dirname = os.path.dirname(save_path)
-            if dirname:
+            if dirname := os.path.dirname(save_path):
                 os.makedirs(dirname, exist_ok=True)
             state_dict = {
                 'state': state.state_dict(),

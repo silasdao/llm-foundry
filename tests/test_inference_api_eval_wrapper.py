@@ -89,11 +89,9 @@ def test_openai_api_eval_wrapper(tmp_path: str):
         model = OpenAICausalLMEvalWrapper(model_cfg={'version': model_name},
                                           tokenizer=tokenizer)
         task_cfg = load_icl_config()
-        evaluators, _ = build_icl_evaluators(task_cfg.icl_tasks,
-                                             tokenizer,
-                                             1024,
-                                             2,
-                                             destination_dir=str(tmp_path))
+        evaluators, _ = build_icl_evaluators(
+            task_cfg.icl_tasks, tokenizer, 1024, 2, destination_dir=tmp_path
+        )
 
         batch = next(evaluators[0].dataloader.dataloader.__iter__())
         result = model.eval_forward(batch)
@@ -124,11 +122,9 @@ def test_chat_api_eval_wrapper(tmp_path: str):
         chatmodel = OpenAIChatAPIEvalWrapper(model_cfg={'version': model_name},
                                              tokenizer=tokenizer)
         task_cfg = load_icl_config()
-        evaluators, _ = build_icl_evaluators(task_cfg.icl_tasks,
-                                             tokenizer,
-                                             1024,
-                                             2,
-                                             destination_dir=str(tmp_path))
+        evaluators, _ = build_icl_evaluators(
+            task_cfg.icl_tasks, tokenizer, 1024, 2, destination_dir=tmp_path
+        )
 
         batch = next(evaluators[0].dataloader.dataloader.__iter__())
         result = chatmodel.eval_forward(batch)

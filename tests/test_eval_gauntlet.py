@@ -33,9 +33,9 @@ class MockState(State):
         self.timestamp = 0
         for key in logger_keys:
             dl_name = '/'.join(key.split('/')[1:-1])
-            self.eval_metrics[dl_name] = {}
-            self.eval_metrics[dl_name][
-                'InContextLearningLMAccuracy'] = InContextLearningLMAccuracy()
+            self.eval_metrics[dl_name] = {
+                'InContextLearningLMAccuracy': InContextLearningLMAccuracy()
+            }
             self.eval_metrics[dl_name][
                 'InContextLearningLMAccuracy'].correct = torch.tensor(accuracy *
                                                                       100)
@@ -66,8 +66,7 @@ def test_gauntlet_callback():
               num_fewshot: [0]
               icl_task_type: language_modeling
             """)
-    assert isinstance(icl_task_config, om.ListConfig) or isinstance(
-        icl_task_config, str)
+    assert isinstance(icl_task_config, (om.ListConfig, str))
 
     eval_gauntlet_config = om.OmegaConf.create("""
                 weighting: EQUAL
@@ -85,8 +84,7 @@ def test_gauntlet_callback():
                       num_fewshot: 0
                       random_baseline: 0.0
           """)
-    assert isinstance(eval_gauntlet_config, om.DictConfig) or isinstance(
-        eval_gauntlet_config, str)
+    assert isinstance(eval_gauntlet_config, (om.DictConfig, str))
     tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-neox-20b')
 
     # test loading functionality

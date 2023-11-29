@@ -59,7 +59,7 @@ def save_ft_config(composer_config: Dict[str, Any],
             config.write(configfile)
         return config
     except:
-        print(f'Failed to save the config in config.ini.')
+        print('Failed to save the config in config.ini.')
         raise
 
 
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     args = parse_args()
     print('\n=============== Argument ===============')
     for key in vars(args):
-        print('{}: {}'.format(key, vars(args)[key]))
+        print(f'{key}: {vars(args)[key]}')
     print('========================================')
 
     save_dir = os.path.join(args.ft_save_dir, f'{args.infer_gpu_num}-gpu')

@@ -118,9 +118,10 @@ def scaled_multihead_dot_product_attention(
         _s_k = max(0, attn_bias.size(3) - s_k)
         attn_bias = attn_bias[:, :, _s_q:, _s_k:]
 
-        if (attn_bias.size(-1) != 1 and
-                attn_bias.size(-1) != s_k) or (attn_bias.size(-2) != 1 and
-                                               attn_bias.size(-2) != s_q):
+        if attn_bias.size(-1) not in [1, s_k] or attn_bias.size(-2) not in [
+            1,
+            s_q,
+        ]:
             raise RuntimeError(
                 f'attn_bias (shape: {attn_bias.shape}) is expected to broadcast to shape: {attn_weight.shape}.'
             )
@@ -140,7 +141,7 @@ def scaled_multihead_dot_product_attention(
         attn_weight = attn_weight.masked_fill(
             ~key_padding_mask.view((b, 1, 1, s_k)), min_val)
 
-    if is_causal and (not q.size(2) == 1):
+    if is_causal and q.size(2) != 1:
         s = max(s_q, s_k)
         causal_mask = attn_weight.new_ones(s, s, dtype=torch.float32)
         causal_mask = causal_mask.tril()
@@ -228,7 +229,7 @@ def flash_attn_fn(
         attn_bias = attn_bias[:, :, _s_q:, _s_k:]
 
     if attn_bias is not None:
-        raise NotImplementedError(f'attn_bias not implemented for flash attn.')
+        raise NotImplementedError('attn_bias not implemented for flash attn.')
 
     batch_size, seqlen = query.shape[:2]
 
@@ -370,13 +371,11 @@ def triton_flash_attn_fn(
         attn_bias = attn_bias[:, :, _s_q:, _s_k:]
 
     if dropout_p:
-        raise NotImplementedError(
-            f'Dropout not implemented for attn_impl: triton.')
+        raise NotImplementedError('Dropout not implemented for attn_impl: triton.')
     dropout_p = dropout_p if training else 0.0
 
     if needs_weights:
-        raise NotImplementedError(
-            f'attn_impl: triton cannot return attn weights.')
+        raise NotImplementedError('attn_impl: triton cannot return attn weights.')
 
     if key_padding_mask is not None:
         warnings.warn(
@@ -646,7 +645,7 @@ def attn_bias_shape(
         use_sequence_id: bool) -> Optional[Tuple[int, int, int, int]]:
     if attn_impl == 'flash':
         return None
-    elif attn_impl in ['torch', 'triton']:
+    elif attn_impl in {'torch', 'triton'}:
         if alibi:
             if (prefix_lm or not causal) or use_sequence_id:
                 return (1, n_heads, seq_len, seq_len)
@@ -669,7 +668,7 @@ def build_attn_bias(
 ) -> Optional[torch.Tensor]:
     if attn_impl == 'flash':
         return None
-    elif attn_impl in ['torch', 'triton']:
+    elif attn_impl in {'torch', 'triton'}:
         if alibi:
             # in place add alibi to attn bias
             device, dtype = attn_bias.device, attn_bias.dtype

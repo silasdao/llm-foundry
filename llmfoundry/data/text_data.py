@@ -109,7 +109,7 @@ class StreamingTextDataset(StreamingDataset):
                 'concatenate, use the --concat_tokens ' +
                 'argument when creating your MDS dataset with concat_c4.py')
 
-        if len(kwargs) > 0:
+        if kwargs:
             raise ValueError(
                 f'StreamingTextDataset() got an unexpected keyword argument: {kwargs}'
             )
@@ -124,7 +124,7 @@ class StreamingTextDataset(StreamingDataset):
 
         # TODO: discover where yamls are being converted incorrect, but temporary workaround
         if isinstance(shuffle_block_size, float):
-            shuffle_block_size = int(shuffle_block_size)
+            shuffle_block_size = shuffle_block_size
 
         # Build Dataset
         super().__init__(
@@ -255,12 +255,7 @@ def build_text_dataloader(
     # build streams
     streams = None
     if streams_dict is not None:
-        streams = []
-        for _, stream in streams_dict.items():
-            # stream is the streams kwargs
-            # fwd all kwargs with **stream allows streaming to check args
-            streams.append(Stream(**stream))
-
+        streams = [Stream(**stream) for _, stream in streams_dict.items()]
     # build dataset potentially with streams
     dataset = StreamingTextDataset(
         tokenizer=tokenizer,

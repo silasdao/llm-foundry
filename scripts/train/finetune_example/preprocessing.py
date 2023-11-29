@@ -37,10 +37,8 @@ from typing import Dict, List, Union
 def multiple_choice(
         inp: Dict[str, Union[str, List[str], int]]) -> Dict[str, str]:
     PROMPT_FORMAT = '{query}\nOptions:{options}\nAnswer: '
-    options = ''
     assert isinstance(inp['choices'], List)
-    for option in inp['choices']:
-        options += f'\n - {option}'
+    options = ''.join(f'\n - {option}' for option in inp['choices'])
     query = inp['query']
 
     assert isinstance(inp['gold'], int)

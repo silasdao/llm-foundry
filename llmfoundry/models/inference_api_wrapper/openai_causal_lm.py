@@ -192,21 +192,19 @@ class OpenAIChatAPIEvalWrapper(OpenAIEvalInterface):
 
     def process_result(self, completion: Optional[dict]):
         assert isinstance(completion, dict)
-        if len(completion['choices']) > 0:
-            tensors = []
-            for t in self.tokenizer(completion['choices'][0]['message']
-                                    ['content'])['input_ids']:
-                tensors.append(
-                    self.tokenizer.construct_logit_tensor(
-                        {self.tokenizer.decode([t]): 0.0}))
-
-            if len(tensors) == 0:
-                return None
-            return torch.stack(tensors)
-        else:
+        if len(completion['choices']) <= 0:
             # the model sometimes stops early even though we are still requesting tokens!
             # not sure if there's a fix
             return None
+        tensors = [
+            self.tokenizer.construct_logit_tensor(
+                {self.tokenizer.decode([t]): 0.0}
+            )
+            for t in self.tokenizer(
+                completion['choices'][0]['message']['content']
+            )['input_ids']
+        ]
+        return None if not tensors else torch.stack(tensors)
 
 
 class OpenAICausalLMEvalWrapper(OpenAIEvalInterface):
@@ -234,9 +232,9 @@ class OpenAICausalLMEvalWrapper(OpenAIEvalInterface):
 
         assert isinstance(completion, dict)
         if len(completion['choices'][0]['logprobs']['top_logprobs']) > 0:
-            tensor = self.tokenizer.construct_logit_tensor(
-                dict(completion['choices'][0]['logprobs']['top_logprobs'][0]))
-            return tensor
+            return self.tokenizer.construct_logit_tensor(
+                dict(completion['choices'][0]['logprobs']['top_logprobs'][0])
+            )
         else:
             # the model sometimes stops early even though we are still requesting tokens!
             # not sure if there's a fix

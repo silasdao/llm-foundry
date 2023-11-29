@@ -61,13 +61,13 @@ class ConcatTokensDataset(IterableDataset):
         no_wrap: bool,
     ):
         self.hf_dataset = hf_dataset
-        self.tokenizer = tokenizer
         os.environ['TOKENIZERS_PARALLELISM'] = 'false'
         self.max_length = max_length
         self.bos_text = bos_text
         self.eos_text = eos_text
         self.should_wrap = not no_wrap
 
+        self.tokenizer = tokenizer
         self.bos_tokens = self.tokenizer(self.bos_text,
                                          truncation=False,
                                          padding=False,
@@ -94,9 +94,7 @@ class ConcatTokensDataset(IterableDataset):
             message = 'both eos and bos' if eos_text_provided and bos_text_provided else (
                 'eos_text' if eos_text_provided else 'bos_text')
             warnings.warn(
-                f'The provided tokenizer adds special tokens, but you also specified {message}. This may result '
-                +
-                'in duplicated special tokens. Please be sure this is what you intend.'
+                f'The provided tokenizer adds special tokens, but you also specified {message}. This may result in duplicated special tokens. Please be sure this is what you intend.'
             )
 
     def __iter__(self) -> Iterable[Dict[str, bytes]]:
