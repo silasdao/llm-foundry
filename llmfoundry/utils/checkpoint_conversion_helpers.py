@@ -130,17 +130,23 @@ def _convert_weight_to_ft_each(save_dir: str, infer_gpu_num: int,
     Returns:
         None: Writes to a file in `save_dir`. File name is based on the `tensor_name`
     """
-    if tensor_name.find('input_layernorm.weight') != -1 or tensor_name.find('input_layernorm.bias') != -1 or \
-        tensor_name.find('attention.dense.bias') != -1 or tensor_name.find('post_attention_layernorm.weight') != -1 or \
-        tensor_name.find('post_attention_layernorm.bias') != -1 or tensor_name.find('mlp.dense_4h_to_h.bias') != -1 or \
-        tensor_name.find('final_layernorm.weight') != -1 or tensor_name.find('final_layernorm.bias') != -1:
+    if (
+        'input_layernorm.weight' in tensor_name
+        or 'input_layernorm.bias' in tensor_name
+        or 'attention.dense.bias' in tensor_name
+        or 'post_attention_layernorm.weight' in tensor_name
+        or 'post_attention_layernorm.bias' in tensor_name
+        or 'mlp.dense_4h_to_h.bias' in tensor_name
+        or 'final_layernorm.weight' in tensor_name
+        or 'final_layernorm.bias' in tensor_name
+    ):
 
         save_path = os.path.join(save_dir, f'model.{tensor_name}.bin')
         data.tofile(save_path)
         if 'weight' in tensor_name and config['no_bias']:
             _write_zero_bias(tensor_name, save_path, data.shape[-1])
 
-    elif tensor_name.find('attention.dense.weight') != -1:
+    elif 'attention.dense.weight' in tensor_name:
         assert data.shape == (
             config['d_model'],
             config['d_model']), f'unexpected dim for {tensor_name}'
@@ -155,7 +161,7 @@ def _convert_weight_to_ft_each(save_dir: str, infer_gpu_num: int,
                                             f'model.{tensor_name}.bin')
             _write_zero_bias(tensor_name, fake_weight_path, data.shape[-1])
 
-    elif tensor_name.find('mlp.dense_4h_to_h.weight') != -1:
+    elif 'mlp.dense_4h_to_h.weight' in tensor_name:
         assert data.shape == (
             config['d_model'], config['mlp_ratio'] *
             config['d_model']), f'unexpected dim for {tensor_name}'
@@ -170,7 +176,7 @@ def _convert_weight_to_ft_each(save_dir: str, infer_gpu_num: int,
                                             f'model.{tensor_name}.bin')
             _write_zero_bias(tensor_name, fake_weight_path, data.shape[-1])
 
-    elif tensor_name.find('mlp.dense_h_to_4h.weight') != -1:
+    elif 'mlp.dense_h_to_4h.weight' in tensor_name:
         assert data.shape == (
             config['mlp_ratio'] * config['d_model'],
             config['d_model']), f'unexpected dim for {tensor_name}'
@@ -185,16 +191,16 @@ def _convert_weight_to_ft_each(save_dir: str, infer_gpu_num: int,
                 _write_zero_bias(tensor_name, save_path,
                                  split_vals[j].shape[-1])
 
-    elif tensor_name.find('mlp.dense_h_to_4h.bias') != -1:
+    elif 'mlp.dense_h_to_4h.bias' in tensor_name:
         assert data.shape == (
             config['mlp_ratio'] *
             config['d_model'],), f'unexpected dim for {tensor_name}'
         split_vals = np.split(data, infer_gpu_num, axis=-1)
         for j in range(infer_gpu_num):
-            save_path = os.path.join(save_dir + f'model.{tensor_name}.{j}.bin')
+            save_path = os.path.join(f'{save_dir}model.{tensor_name}.{j}.bin')
             split_vals[j].tofile(save_path)
 
-    elif tensor_name.find('attention.query_key_value.bias') != -1:
+    elif 'attention.query_key_value.bias' in tensor_name:
         assert data.shape == (
             3 * config['d_model'],), f'unexpected dim for {tensor_name}'
 
@@ -206,7 +212,7 @@ def _convert_weight_to_ft_each(save_dir: str, infer_gpu_num: int,
             save_path = os.path.join(save_dir, f'model.{tensor_name}.{j}.bin')
             split_vals[j].tofile(save_path)
 
-    elif tensor_name.find('attention.query_key_value.weight') != -1:
+    elif 'attention.query_key_value.weight' in tensor_name:
         assert data.shape == (
             3 * config['d_model'],
             config['d_model']), f'unexpected dim for {tensor_name}'

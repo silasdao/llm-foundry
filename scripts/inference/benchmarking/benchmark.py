@@ -13,23 +13,23 @@ from llmfoundry import COMPOSER_MODEL_REGISTRY
 
 
 def get_dtype(dtype: str):
-    if dtype == 'fp32':
-        return torch.float32
+    if dtype == 'bf16':
+        return torch.bfloat16
     elif dtype == 'fp16':
         return torch.float16
-    elif dtype == 'bf16':
-        return torch.bfloat16
+    elif dtype == 'fp32':
+        return torch.float32
     else:
         raise NotImplementedError(
-            f'dtype {dtype} is not supported. ' +
-            f'We only support fp32, fp16, and bf16 currently')
+            f'dtype {dtype} is not supported. We only support fp32, fp16, and bf16 currently'
+        )
 
 
 def compare_dtype(dtype: torch.dtype, param_dtype: torch.dtype):
     if dtype != param_dtype:
         raise ValueError(
-            f'dtype type is: {dtype} but model dtype is: {param_dtype}. ' +
-            f"The expected dtype and model dtype don't match.")
+            f"dtype type is: {dtype} but model dtype is: {param_dtype}. The expected dtype and model dtype don't match."
+        )
 
 
 def main(config: DictConfig):

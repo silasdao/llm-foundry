@@ -169,15 +169,11 @@ def test_tiktoken_vocab(model_name: Optional[str], encoding_name: Optional[str],
     reloaded_wrapped_vocab = reloaded_wrapped_tokenizer.get_vocab()
     assert wrapped_vocab == reloaded_wrapped_vocab
 
-    didnt_match = []
-    for key, value in wrapped_vocab.items():
-        if original_tokenizer.encode(key, allowed_special='all') == [value]:
-            continue
-        else:
-            didnt_match.append(
-                (key, original_tokenizer.encode(key,
-                                                allowed_special='all'), value))
-
+    didnt_match = [
+        (key, original_tokenizer.encode(key, allowed_special='all'), value)
+        for key, value in wrapped_vocab.items()
+        if original_tokenizer.encode(key, allowed_special='all') != [value]
+    ]
     # Decode is lossy because some bytes are not representable in utf-8
     # see https://github.com/openai/tiktoken/blob/39f29cecdb6fc38d9a3434e5dd15e4de58cf3c80/tiktoken/core.py#L245-L247
     # This means that the str: int vocab mapping doesn't work. Would have to look more into how other HF tokenizers handle this.

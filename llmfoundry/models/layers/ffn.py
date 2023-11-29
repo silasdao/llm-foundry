@@ -68,7 +68,7 @@ def build_ffn(
 ) -> nn.Module:
     ffn_type = kwargs.pop('ffn_type')
     if ffn_type == 'mptmlp':
-        if len(kwargs) > 0:
+        if kwargs:
             raise ValueError(
                 f'MPTMLP got an unexpected keyword argument: {kwargs}')
         return MPTMLP(

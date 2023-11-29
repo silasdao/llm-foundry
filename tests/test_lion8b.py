@@ -194,10 +194,9 @@ def test_lion8b_fused_unfused_unquantized_same(w_init: str, grad_strategy: str,
 
     # each optimizer gets a different copy of the weight matrix to optimize
     if w_init == 'cyclic':
-        W0 = torch.arange(D * D,
-                          device=device,
-                          requires_grad=False,
-                          dtype=dtype).reshape(D, D)
+        W0 = torch.arange(
+            D**2, device=device, requires_grad=False, dtype=dtype
+        ).reshape(D, D)
         W0 = ((W0 // 2 % 3) - 1).to(dtype=dtype)
     elif w_init == 'rand':
         W0 = torch.rand(
@@ -205,7 +204,7 @@ def test_lion8b_fused_unfused_unquantized_same(w_init: str, grad_strategy: str,
             dtype=dtype) * 2 - 1
         W0 += .01 * torch.sign(W0)  # bound away from 0 to cap rel errors
         W0 = W0.to(dtype=dtype)
-    else:  # here for pyright
+    else:
         raise ValueError('Unrecognized w_init: ', w_init)
     W0.add_(W0.sign())  # bound away from zero so decay won't flip sign
     W_true = torch.empty_like(W0, requires_grad=True,
@@ -238,20 +237,19 @@ def test_lion8b_fused_unfused_unquantized_same(w_init: str, grad_strategy: str,
     W_list = [W_true, W_uq, W_uf, W_fq, W_fqe, W_sgd]
     opt_list = [opt_true, opt_uq, opt_uf, opt_fq, opt_fqe, opt_sgd]
 
-    if grad_strategy == 'zero':
-        grads = torch.zeros_like(W0)
-    elif grad_strategy == 'ones':
-        grads = ((torch.arange(W0.numel()) % 2) * 2 - 1).reshape(W0.shape)
-    elif grad_strategy == 'const':
+    if grad_strategy == 'const':
         # arange makes blocks have different distros, so we can't
         # get away with bugs like always using the first scale_scale
         grads = torch.arange(W0.numel(),
                              device=device,
                              requires_grad=False,
                              dtype=W0.dtype).view(W0.shape)
-    # next two conditions are just here for pyright
+    elif grad_strategy == 'ones':
+        grads = ((torch.arange(W0.numel()) % 2) * 2 - 1).reshape(W0.shape)
     elif grad_strategy == 'rand':
         grads = torch.tensor([-1])
+    elif grad_strategy == 'zero':
+        grads = torch.zeros_like(W0)
     else:
         raise ValueError('bad grad_strategy: ', grad_strategy)
 
@@ -410,9 +408,9 @@ def test_fsdp_save_load(dtype: torch.dtype, use_errors: bool,
                         state_sharding: fsdp.StateDictType):
     device = 'cuda'
     if torch.cuda.device_count() < 2:
-        pytest.skip(f'This test requires 2+ GPUs.')
+        pytest.skip('This test requires 2+ GPUs.')
     if version.parse(torch.__version__) < version.parse('2.0.1'):
-        pytest.skip(f'This test requires torch 2.0.1 or greater.')
+        pytest.skip('This test requires torch 2.0.1 or greater.')
 
     torch.cuda.set_device(f'cuda:{os.environ["RANK"]}')  # needed for fsdp
     if not dist.is_initialized():

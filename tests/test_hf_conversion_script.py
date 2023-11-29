@@ -194,7 +194,6 @@ def test_huggingface_conversion_callback(model: str, tmp_path: pathlib.Path,
     save_interval_batches = 2
     huggingface_save_interval_batches = 3
     device_batch_size = 1
-    dataset_size = 14
     max_duration_batches = 7
     precision_str = 'bfloat16'
     precision = torch.bfloat16
@@ -208,7 +207,25 @@ def test_huggingface_conversion_callback(model: str, tmp_path: pathlib.Path,
     # get small version of each model
     model_cfg = None
     tokenizer_name = None
-    if model == 'mpt':
+    if model == 'llama2':
+        if 'HUGGING_FACE_HUB_TOKEN' not in os.environ:
+            pytest.skip(
+                'The CI cluster does not have access to the Llama models, so skip this test.'
+            )
+        model_cfg = {
+            'name': 'hf_causal_lm',
+            'pretrained_model_name_or_path': 'meta-llama/Llama-2-7b-hf',
+            'config_overrides': {
+                'num_hidden_layers': 2,
+                'hidden_size': 32,
+                'intermediate_size': 64,
+            },
+            'use_auth_token': True,
+            'pretrained': False,
+            'init_device': 'cpu',
+        }
+        tokenizer_name = 'meta-llama/Llama-2-7b-hf'
+    elif model == 'mpt':
         model_cfg = {
             'name': 'mpt_causal_lm',
             'init_device': 'cpu',
@@ -236,24 +253,6 @@ def test_huggingface_conversion_callback(model: str, tmp_path: pathlib.Path,
             'init_device': 'cpu',
         }
         tokenizer_name = 'EleutherAI/gpt-neo-125M'
-    elif model == 'llama2':
-        if 'HUGGING_FACE_HUB_TOKEN' not in os.environ:
-            pytest.skip(
-                'The CI cluster does not have access to the Llama models, so skip this test.'
-            )
-        model_cfg = {
-            'name': 'hf_causal_lm',
-            'pretrained_model_name_or_path': 'meta-llama/Llama-2-7b-hf',
-            'config_overrides': {
-                'num_hidden_layers': 2,
-                'hidden_size': 32,
-                'intermediate_size': 64,
-            },
-            'use_auth_token': True,
-            'pretrained': False,
-            'init_device': 'cpu',
-        }
-        tokenizer_name = 'meta-llama/Llama-2-7b-hf'
     else:
         raise ValueError(f'Unknown model {model}')
     assert model_cfg is not None
@@ -276,6 +275,7 @@ def test_huggingface_conversion_callback(model: str, tmp_path: pathlib.Path,
     tiny_dataset_folder_path = os.path.join(os.getcwd(), 'test-ift-data-small')
     tiny_dataset_path = os.path.join(tiny_dataset_folder_path, 'train.jsonl')
     if dist.get_global_rank() == 0:
+        dataset_size = 14
         make_tiny_ft_dataset(path=tiny_dataset_path, size=dataset_size)
 
     dataloader_cfg = {
@@ -341,8 +341,8 @@ def test_huggingface_conversion_callback(model: str, tmp_path: pathlib.Path,
     # summon full params to check equivalence
     from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
     with FSDP.summon_full_params(trainer.state.model,
-                                 writeback=False,
-                                 recurse=True):
+                                     writeback=False,
+                                     recurse=True):
         loaded_model = None
         loaded_tokenizer = None
         # Only rank zero is saving the huggingface checkpoints, so only check
@@ -353,10 +353,11 @@ def test_huggingface_conversion_callback(model: str, tmp_path: pathlib.Path,
                 for name in os.listdir(os.path.join(tmp_path, 'checkpoints'))
                 if name != 'huggingface'
             ]
-            huggingface_checkpoints = [
-                name for name in os.listdir(
-                    os.path.join(tmp_path, 'checkpoints', 'huggingface'))
-            ]
+            huggingface_checkpoints = list(
+                os.listdir(
+                    os.path.join(tmp_path, 'checkpoints', 'huggingface')
+                )
+            )
             assert len(normal_checkpoints) == math.ceil(max_duration_batches /
                                                         save_interval_batches)
             assert len(huggingface_checkpoints) == math.ceil(

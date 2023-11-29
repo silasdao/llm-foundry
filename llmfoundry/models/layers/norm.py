@@ -57,9 +57,7 @@ def rms_norm(x: torch.Tensor,
              weight: Optional[torch.Tensor] = None,
              eps: float = 1e-5) -> torch.Tensor:
     output = x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + eps)
-    if weight is not None:
-        return output * weight
-    return output
+    return output * weight if weight is not None else output
 
 
 class RMSNorm(torch.nn.Module):

@@ -41,10 +41,10 @@ class TestHuggingFaceEvalYAMLInputs:
         mandatory_configs = ['models', 'icl_tasks']
         for p in mandatory_params + mandatory_configs:
             with pytest.raises((omegaconf.errors.ConfigKeyError,
-                                omegaconf.errors.InterpolationKeyError)):
-                cfg[p + '-mispelled'] = cfg.pop(p)
+                                        omegaconf.errors.InterpolationKeyError)):
+                cfg[f'{p}-mispelled'] = cfg.pop(p)
                 main(cfg)
-                cfg[p] = cfg.pop(p + '-mispelled')
+                cfg[p] = cfg.pop(f'{p}-mispelled')
 
     def test_optional_mispelled_params_raise_warning(self,
                                                      cfg: DictConfig) -> None:
@@ -61,7 +61,7 @@ class TestHuggingFaceEvalYAMLInputs:
         old_cfg = copy.deepcopy(cfg)
         for param in optional_params:
             orig_value = cfg.pop(param, None)
-            updated_param = param + '-mispelling'
+            updated_param = f'{param}-mispelling'
             cfg[updated_param] = orig_value
             with warnings.catch_warnings(record=True) as warning_list:
                 try:

@@ -56,9 +56,9 @@ def load_peft_model(model_cfg: DictConfig, tokenizer: PreTrainedTokenizerBase,
             peft_model = PeftModel.from_pretrained(
                 model, model_cfg.pretrained_lora_id_or_path)
 
-            composer_model_wrapper = COMPOSER_MODEL_REGISTRY[model_cfg.name](
-                peft_model, tokenizer)
-            return composer_model_wrapper
+            return COMPOSER_MODEL_REGISTRY[model_cfg.name](
+                peft_model, tokenizer
+            )
         except Exception as e:
             retries += 1
             if retries >= num_retries:
@@ -78,9 +78,9 @@ def load_model(model_cfg: DictConfig, tokenizer: PreTrainedTokenizerBase,
     with init_context:
         while retries < num_retries:
             try:
-                composer_model = COMPOSER_MODEL_REGISTRY[model_cfg.name](
-                    model_cfg, tokenizer)
-                return composer_model
+                return COMPOSER_MODEL_REGISTRY[model_cfg.name](
+                    model_cfg, tokenizer
+                )
             except Exception as e:
                 retries += 1
                 if retries >= num_retries:
@@ -320,18 +320,15 @@ def main(cfg: DictConfig):
                                      None)
                 for t in eval_gauntlet_callback.categories
             })
-            row.update({
-                'average':
-                    composite_scores[f'icl/metrics/eval_gauntlet/average']
-            })
+            row['average'] = composite_scores['icl/metrics/eval_gauntlet/average']
             eval_gauntlet_df = pd.concat(
                 [eval_gauntlet_df, pd.DataFrame([row])], ignore_index=True)
 
-            print(f'Printing gauntlet results for all models')
+            print('Printing gauntlet results for all models')
             print(
                 eval_gauntlet_df.sort_values(
                     'average', ascending=False).to_markdown(index=False))
-        print(f'Printing complete results for all models')
+        print('Printing complete results for all models')
         assert models_df is not None
         print(models_df.to_markdown(index=False))
 

@@ -302,10 +302,10 @@ def is_already_processed(output_root: str, args_str: str,
     prev_names = done_file_contents[1:]
     if len(prev_names) != len(object_names):
         return False
-    for idx, prev_name in enumerate(prev_names):
-        if object_names[idx] != prev_name:
-            return False
-    return True
+    return all(
+        object_names[idx] == prev_name
+        for idx, prev_name in enumerate(prev_names)
+    )
 
 
 def write_done_file(folder: str, args_str: str, object_names: List[str]):

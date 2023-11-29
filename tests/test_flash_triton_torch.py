@@ -116,7 +116,7 @@ def test_attn_impl(attn_impl_0: str,
 
     assert allclose_helper(y0, y1)
 
-    torch_name_param_map = {n: p for n, p in attn1.named_parameters()}
+    torch_name_param_map = dict(attn1.named_parameters())
     for n, p in attn0.named_parameters():
         tp = torch_name_param_map[n]
         assert p.grad is not None

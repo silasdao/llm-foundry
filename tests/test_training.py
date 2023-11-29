@@ -25,7 +25,7 @@ from scripts.train.train import main  # noqa: E402
 
 def create_c4_dataset_xsmall(path: pathlib.Path) -> str:
     """Creates a small mocked version of the C4 dataset."""
-    c4_dir = os.path.join(path, f'my-copy-c4')
+    c4_dir = os.path.join(path, 'my-copy-c4')
     downloaded_split = 'val_xsmall'  # very fast to convert
 
     # Hyperparameters from https://github.com/mosaicml/llm-foundry/blob/340a56658560ebceb2a3aa69d6e37813e415acd0/README.md#L188
@@ -57,7 +57,7 @@ def create_c4_dataset_xsmall(path: pathlib.Path) -> str:
 
 def create_arxiv_dataset(path: pathlib.Path) -> str:
     """Creates an arxiv dataset."""
-    arxiv_dir = os.path.join(path, f'my-copy-arxiv')
+    arxiv_dir = os.path.join(path, 'my-copy-arxiv')
     downloaded_split = 'train'
 
     main_json(

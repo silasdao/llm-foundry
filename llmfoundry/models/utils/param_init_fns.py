@@ -41,7 +41,7 @@ def fused_init_helper_(module: nn.Module, init_fn_: Callable) -> None:
     _fused = getattr(module, '_fused', None)
 
     if _fused is None:
-        raise RuntimeError(f'Internal logic error')
+        raise RuntimeError('Internal logic error')
 
     assert isinstance(module.weight, torch.Tensor)
 
@@ -74,8 +74,7 @@ def generic_param_init_fn_(
         div_is_residual = 1.0
     elif init_div_is_residual is True:
         div_is_residual = math.sqrt(2 * n_layers)
-    elif isinstance(init_div_is_residual, float) or isinstance(
-            init_div_is_residual, int):
+    elif isinstance(init_div_is_residual, (float, int)):
         div_is_residual = init_div_is_residual
     elif init_div_is_residual.isnumeric():
         # do not trust YAML parsing to always convert numbers to numbers
@@ -107,7 +106,7 @@ def generic_param_init_fn_(
         if emb_init_std is not None:
             std = emb_init_std
             if std == 0:
-                warnings.warn(f'Embedding layer initialized to 0.')
+                warnings.warn('Embedding layer initialized to 0.')
             emb_init_fn_ = partial(torch.nn.init.normal_, mean=0.0, std=std)
         elif emb_init_uniform_lim is not None:
             lim = emb_init_uniform_lim
@@ -120,7 +119,7 @@ def generic_param_init_fn_(
                     warnings.warn(f'Embedding layer initialized to {lim[0]}.')
             else:
                 if lim == 0:
-                    warnings.warn(f'Embedding layer initialized to 0.')
+                    warnings.warn('Embedding layer initialized to 0.')
                 lim = [-lim, lim]
             a, b = lim
             emb_init_fn_ = partial(torch.nn.init.uniform_, a=a, b=b)

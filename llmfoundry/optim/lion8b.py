@@ -68,25 +68,22 @@ class DecoupledLionW_8bit(torch.optim.Optimizer):
                  error_correction: bool = False,
                  _fused: bool = True):  # XXX this flag is mostly for testing...
         if lr < 0.0:
-            raise ValueError('Invalid learning rate: {}'.format(lr))
+            raise ValueError(f'Invalid learning rate: {lr}')
         if not 0.0 <= betas[0] <= 1.0:
-            raise ValueError('Invalid beta parameter at index 0: {}'.format(
-                betas[0]))
+            raise ValueError(f'Invalid beta parameter at index 0: {betas[0]}')
         if not 0.0 <= betas[1] <= 1.0:
-            raise ValueError('Invalid beta parameter at index 1: {}'.format(
-                betas[1]))
-        if not 0.0 <= weight_decay:
-            raise ValueError(
-                'Invalid weight_decay value: {}'.format(weight_decay))
+            raise ValueError(f'Invalid beta parameter at index 1: {betas[1]}')
+        if weight_decay < 0.0:
+            raise ValueError(f'Invalid weight_decay value: {weight_decay}')
 
         if not torch.cuda.is_available():
             needs_cuda = ' requires a CUDA device.'
             if quantize:
-                raise NotImplementedError('Quantization' + needs_cuda)
+                raise NotImplementedError(f'Quantization{needs_cuda}')
             if error_correction:
-                raise NotImplementedError('Error correction' + needs_cuda)
+                raise NotImplementedError(f'Error correction{needs_cuda}')
             if compress_state_dict:
-                raise NotImplementedError('Quantized state dict' + needs_cuda)
+                raise NotImplementedError(f'Quantized state dict{needs_cuda}')
 
         _fused = _fused and quantize
         self._quantize = quantize
@@ -184,7 +181,7 @@ class DecoupledLionW_8bit(torch.optim.Optimizer):
             # make a copy so that we don't mutate our self.state; opt_state
             # isn't the same as self.state, but its consituent dicts are
             # the same as those in self.state
-            param_state = {k: v for k, v in opt_state[param_id].items()}
+            param_state = dict(opt_state[param_id].items())
             if 'exp_avg' in param_state:  # true if we've taken any steps
                 qtensor = param_state.pop('exp_avg')
                 assert isinstance(qtensor, _MaybeQuantizedTensor)  # pyright

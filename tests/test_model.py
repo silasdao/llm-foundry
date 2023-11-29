@@ -99,11 +99,13 @@ def get_objs(conf_path: str = 'scripts/train/yamls/pretrain/testing.yaml'):
 
 def gen_random_batch(batch_size: int, test_cfg: Union[DictConfig, ListConfig]):
     # generate input batch of random data, suitable for a Causal or Prefix LM
-    batch = {}
-    batch['input_ids'] = torch.randint(
-        low=0,
-        high=test_cfg.model.vocab_size,
-        size=(batch_size, test_cfg.max_seq_len)).to(test_cfg.device)
+    batch = {
+        'input_ids': torch.randint(
+            low=0,
+            high=test_cfg.model.vocab_size,
+            size=(batch_size, test_cfg.max_seq_len),
+        ).to(test_cfg.device)
+    }
     batch['labels'] = torch.randint(low=0,
                                     high=test_cfg.model.vocab_size,
                                     size=(batch_size, test_cfg.max_seq_len)).to(
@@ -119,11 +121,11 @@ def gen_random_batch(batch_size: int, test_cfg: Union[DictConfig, ListConfig]):
 def gen_random_enc_dec_batch(batch_size: int, vocab_size: int, max_seq_len: int,
                              device: str):
     # generate input batch of random data, suitable for a T5
-    batch = {}
-    batch['input_ids'] = torch.randint(low=0,
-                                       high=vocab_size,
-                                       size=(batch_size,
-                                             max_seq_len)).to(device)
+    batch = {
+        'input_ids': torch.randint(
+            low=0, high=vocab_size, size=(batch_size, max_seq_len)
+        ).to(device)
+    }
     batch['labels'] = torch.randint(low=0,
                                     high=vocab_size,
                                     size=(batch_size, max_seq_len)).to(device)
@@ -224,11 +226,7 @@ def test_full_forward_and_backward_gpt2_small(prefixlm: bool,
     neo_cfg.device = device
     neo_cfg.max_seq_len = 256
 
-    if prefixlm:
-        neo_cfg.model.name = 'hf_prefix_lm'
-    else:
-        neo_cfg.model.name = 'hf_causal_lm'
-
+    neo_cfg.model.name = 'hf_prefix_lm' if prefixlm else 'hf_causal_lm'
     tokenizer_cfg: Dict[str, Any] = _load_tokenizer_cfg(neo_cfg.tokenizer)
     tokenizer = build_tokenizer(neo_cfg.tokenizer.name,
                                 tokenizer_cfg.get('kwargs', {}))
@@ -535,7 +533,7 @@ def test_forward_with_padding(attention_impl: str, device: str, alibi: bool):
             f'This test requires CUDA to be available in order to run with {attention_impl} attention.'
         )
     if alibi and attention_impl == 'flash':
-        pytest.skip(f'alibi only implemented with torch and triton attention.')
+        pytest.skip('alibi only implemented with torch and triton attention.')
 
     reproducibility.seed_all(1234)
     composer_device = get_device(device)
@@ -714,7 +712,7 @@ def test_generate(attention_impl: str, device: str, alibi: bool):
             f'This test requires CUDA to be available in order to run with {attention_impl} attention.'
         )
     if alibi and attention_impl == 'flash':
-        pytest.skip(f'alibi only implemented with torch and triton attention.')
+        pytest.skip('alibi only implemented with torch and triton attention.')
 
     reproducibility.seed_all(1234)
     composer_device = get_device(device)
@@ -802,8 +800,8 @@ def test_generate(attention_impl: str, device: str, alibi: bool):
 def test_generate_with_device_map(tmp_path: pathlib.Path, world_size: int,
                                   use_cache: bool):
     if not torch.cuda.is_available():
-        pytest.skip(f'This test requires CUDA to be available.')
-    if not torch.cuda.device_count() >= world_size:
+        pytest.skip('This test requires CUDA to be available.')
+    if torch.cuda.device_count() < world_size:
         pytest.skip(f'This test requires {world_size} GPUs.')
 
     save_path = tmp_path / 'test-device-map'
@@ -982,7 +980,7 @@ def test_forward_with_cache(attn_impl: str, device: str, alibi: bool):
             f'This test requires CUDA to be available in order to run with {attn_impl} attention.'
         )
     if alibi and attn_impl == 'flash':
-        pytest.skip(f'alibi only implemented with torch and triton attention.')
+        pytest.skip('alibi only implemented with torch and triton attention.')
 
     composer_device = get_device(device)
 
@@ -1184,7 +1182,7 @@ def test_model_to(attention_impl: str, alibi: bool):
             f'This test requires CUDA to be available in order to run with {attention_impl} attention.'
         )
     if alibi and attention_impl == 'flash':
-        pytest.skip(f'alibi only implemented with torch and triton attention.')
+        pytest.skip('alibi only implemented with torch and triton attention.')
 
     hf_config = MPTConfig(
         init_device='cpu',
@@ -1289,9 +1287,9 @@ def test_forward_with_output_attentions_and_output_hidden_states(
             f'This test requires CUDA to be available in order to run with {attn_impl} attention.'
         )
     if alibi and attn_impl == 'flash':
-        pytest.skip(f'alibi only implemented with torch and triton attention.')
-    if output_attentions and attn_impl in ['flash', 'triton']:
-        pytest.skip(f'output_attentions only implemented with torch attention.')
+        pytest.skip('alibi only implemented with torch and triton attention.')
+    if output_attentions and attn_impl in {'flash', 'triton'}:
+        pytest.skip('output_attentions only implemented with torch attention.')
 
     composer_device = get_device(device)
 
@@ -1355,8 +1353,8 @@ def test_hf_init(tmp_path: pathlib.Path,
                  world_size: int,
                  batch_size: int = 1):
     if not torch.cuda.is_available():
-        pytest.skip(f'This test requires CUDA to be available.')
-    if not torch.cuda.device_count() >= world_size:
+        pytest.skip('This test requires CUDA to be available.')
+    if torch.cuda.device_count() < world_size:
         pytest.skip(f'This test requires {world_size} GPUs.')
 
     torch.cuda.empty_cache()
@@ -1376,11 +1374,7 @@ def test_hf_init(tmp_path: pathlib.Path,
     save_path = tmp_path / 'test-hf-device-init'
 
     if init_device == 'mixed':
-        if dist.get_local_rank() != 0:
-            init_device = 'meta'
-        else:
-            init_device = 'cpu'
-
+        init_device = 'meta' if dist.get_local_rank() != 0 else 'cpu'
     precision = Precision('amp_bf16')
 
     hf_config = MPTConfig(
@@ -1417,9 +1411,7 @@ def test_hf_init(tmp_path: pathlib.Path,
     tokenizer = build_tokenizer(test_cfg.tokenizer.name,
                                 tokenizer_cfg.get('kwargs', {}))
 
-    optimizer = DecoupledAdamW(model.parameters(),
-                               lr=1e-5,
-                               betas=tuple([0.9, 0.99]))
+    optimizer = DecoupledAdamW(model.parameters(), lr=1e-5, betas=(0.9, 0.99))
 
     prepare_fsdp_module(model, optimizer, fsdp_config, precision, device, False)
 

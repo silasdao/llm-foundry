@@ -15,16 +15,16 @@ from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 
 
 def get_dtype(dtype: str):
-    if dtype == 'fp32':
-        return torch.float32
+    if dtype == 'bf16':
+        return torch.bfloat16
     elif dtype == 'fp16':
         return torch.float16
-    elif dtype == 'bf16':
-        return torch.bfloat16
+    elif dtype == 'fp32':
+        return torch.float32
     else:
         raise NotImplementedError(
-            f'dtype {dtype} is not supported. ' +\
-            f'We only support fp32, fp16, and bf16 currently')
+            f'dtype {dtype} is not supported. We only support fp32, fp16, and bf16 currently'
+        )
 
 
 def str2bool(v: Union[str, bool]):
@@ -170,7 +170,7 @@ def main(args: Namespace) -> None:
         prompt_strings.append(prompt)
 
     # Grab config first
-    print(f'Loading HF Config...')
+    print('Loading HF Config...')
     from_pretrained_kwargs = {
         'use_auth_token': args.use_auth_token,
         'trust_remote_code': args.trust_remote_code,

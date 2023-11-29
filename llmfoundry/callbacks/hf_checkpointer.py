@@ -81,8 +81,8 @@ class HuggingFaceCheckpointer(Callback):
         elif event == Event.INIT:
             if not isinstance(state.model, HuggingFaceModel):
                 raise ValueError(
-                    f'`HuggingFaceCheckpointer` is only compatible with `HuggingFaceModel`s. '
-                    + f'Got {type(state.model)} instead.')
+                    f'`HuggingFaceCheckpointer` is only compatible with `HuggingFaceModel`s. Got {type(state.model)} instead.'
+                )
             if self.upload_to_object_store and self.remote_ud is not None:
                 self.remote_ud.init(state, logger)
                 state.callbacks.append(self.remote_ud)

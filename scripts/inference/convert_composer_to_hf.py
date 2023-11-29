@@ -193,7 +193,6 @@ def convert_composer_to_hf(args: Namespace) -> None:
         config.attn_config['attn_impl'] = 'torch'
         config.init_device = 'cpu'
 
-    if config.model_type == 'mpt':
         loaded_hf_model = MPTForCausalLM.from_pretrained(local_folder_path,
                                                          config=config,
                                                          torch_dtype=dtype)

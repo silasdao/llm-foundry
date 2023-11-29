@@ -99,12 +99,10 @@ def convert_mpt_to_ft(model_name_or_path: str,
         with open(os.path.join(save_dir, 'config.ini'), 'w') as configfile:
             config.write(configfile)
     except:
-        print(f'Failed to save the config in config.ini.')
+        print('Failed to save the config in config.ini.')
         raise
 
-    named_params_dict = {
-        name: param for name, param in model.named_parameters()
-    }
+    named_params_dict = dict(model.named_parameters())
     convert_and_save_ft_weights(named_params=named_params_dict,
                                 config=hf_config,
                                 infer_gpu_num=infer_gpu_num,
@@ -147,7 +145,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print('\n=============== Argument ===============')
     for key in vars(args):
-        print('{}: {}'.format(key, vars(args)[key]))
+        print(f'{key}: {vars(args)[key]}')
     print('========================================')
 
     convert_mpt_to_ft(args.name_or_dir, args.save_dir, args.infer_gpu_num,

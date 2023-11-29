@@ -70,7 +70,7 @@ class LayerFreezing(Callback):
     def fit_start(self, state: State, logger: Logger) -> None:
         del logger  # unused
 
-        model_layers = set(name for name, _ in state.model.named_parameters())
+        model_layers = {name for name, _ in state.model.named_parameters()}
         for layer in self.layer_names:
             if layer not in model_layers:
                 raise Exception(
@@ -85,5 +85,4 @@ class LayerFreezing(Callback):
                 successful_freeze = True
 
         if not successful_freeze:
-            raise Exception(
-                f"Tried to run LayerFreezing but didn't freeze any layers")
+            raise Exception("Tried to run LayerFreezing but didn't freeze any layers")

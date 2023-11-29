@@ -112,7 +112,7 @@ class EvalGauntlet(Callback):
             val = metric.compute().item()
 
             # ending at index 2 allows us to aggregate over dataloaders w/ subcategories
-            key = '/'.join(dl_name[0:2])
+            key = '/'.join(dl_name[:2])
             if key not in results:
                 results[key] = []
 
@@ -151,7 +151,7 @@ class EvalGauntlet(Callback):
                         'weighting': benchmark['weighting']
                     })
 
-            if len(missing_metrics) > 0:
+            if missing_metrics:
                 log.warning(
                     f"Removing category `{category['name']}` from scores because benchmarks were missing: {missing_metrics}"
                 )

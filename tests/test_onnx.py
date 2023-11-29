@@ -11,19 +11,17 @@ from llmfoundry import MPTConfig, MPTForCausalLM
 
 
 def gen_random_batch(batch_size: int, vocab_size: int, max_seq_len: int):
-    # generate input batch of random data
-    batch = {
-        'input_ids':
-            torch.randint(
-                low=0,
-                high=vocab_size,
-                size=(batch_size, max_seq_len),
-                dtype=torch.int64,
-            ),
-        'attention_mask':
-            torch.ones(size=(batch_size, max_seq_len), dtype=torch.bool)
+    return {
+        'input_ids': torch.randint(
+            low=0,
+            high=vocab_size,
+            size=(batch_size, max_seq_len),
+            dtype=torch.int64,
+        ),
+        'attention_mask': torch.ones(
+            size=(batch_size, max_seq_len), dtype=torch.bool
+        ),
     }
-    return batch
 
 
 def test_onnx_export(tmp_path: pathlib.Path):
@@ -93,5 +91,5 @@ def test_onnx_export(tmp_path: pathlib.Path):
         loaded_model_out[0],
         rtol=1e-4,
         atol=1e-4,
-        msg=f'output mismatch between the orig and onnx exported model',
+        msg='output mismatch between the orig and onnx exported model',
     )

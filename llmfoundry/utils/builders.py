@@ -107,16 +107,14 @@ def build_callback(name: str, kwargs: Dict[str, Any]) -> Callback:
 
 
 def build_logger(name: str, kwargs: Dict[str, Any]) -> LoggerDestination:
-    if name == 'wandb':
-        return WandBLogger(**kwargs)
-    elif name == 'tensorboard':
-        return TensorboardLogger(**kwargs)
-    elif name == 'in_memory_logger':
+    if name in {'in_memory_logger', 'inmemory'}:
         return InMemoryLogger(**kwargs)
     elif name == 'mlflow':
         return MLFlowLogger(**kwargs)
-    elif name == 'inmemory':
-        return InMemoryLogger(**kwargs)
+    elif name == 'tensorboard':
+        return TensorboardLogger(**kwargs)
+    elif name == 'wandb':
+        return WandBLogger(**kwargs)
     else:
         raise ValueError(f'Not sure how to build logger: {name}')
 

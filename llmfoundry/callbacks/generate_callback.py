@@ -65,9 +65,9 @@ class Generate(Callback):
 
         # stash the original original value of padding_side because generation requires left padding
         original_padding_side = tokenizer.padding_side
-        tokenizer.padding_side = 'left'
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token_id = tokenizer.eos_token_id
+        tokenizer.padding_side = 'left'
         tokenized_input = tokenizer(self.prompts,
                                     return_tensors='pt',
                                     padding=True)
@@ -94,9 +94,9 @@ class Generate(Callback):
             if self.wandb_logger is not None:
                 assert wandb.run is not None, 'wandb should have started run'
 
-                artifact = wandb.Artifact('generate_samples_' +
-                                          str(wandb.run.id),
-                                          type='predictions')
+                artifact = wandb.Artifact(
+                    f'generate_samples_{str(wandb.run.id)}', type='predictions'
+                )
 
                 rows = []
                 for i in range(len(self.prompts)):

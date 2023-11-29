@@ -157,20 +157,20 @@ def build_finetuning_dataloader(cfg: DictConfig,
 
     else:
         backend, _, _ = parse_uri(cfg.dataset.hf_name)
-        if backend not in ['', None]:
-            if cfg.dataset.get('split') is None:
-                raise ValueError(
-                    'When using a HuggingFace dataset from a URL, you must set the ' + \
-                    '`split` key in the dataset config.'
-                )
-            dataset = _build_hf_dataset_from_remote(cfg, tokenizer)
-        else:
+        if backend in ['', None]:
             dataset = dataset_constructor.build_from_hf(
                 cfg.dataset,
                 max_seq_len=cfg.dataset.max_seq_len,
                 tokenizer=tokenizer,
             )
 
+        elif cfg.dataset.get('split') is None:
+            raise ValueError(
+                'When using a HuggingFace dataset from a URL, you must set the ' + \
+                '`split` key in the dataset config.'
+            )
+        else:
+            dataset = _build_hf_dataset_from_remote(cfg, tokenizer)
         collate_fn, dataloader_batch_size = _build_collate_fn(
             cfg.dataset, tokenizer, device_batch_size)
 
@@ -225,30 +225,24 @@ def _validate_config(dataset_cfg: DictConfig) -> None:
     if dataset_cfg.get('hf_name') is not None:
         # Using the HuggingFace dataset codepath
         illegal_keys = ['local', 'remote']
-        discovered_illegal_keys = []
-        for key in illegal_keys:
-            if dataset_cfg.get(key) is not None:
-                discovered_illegal_keys.append('`' + key + '`')
-        if discovered_illegal_keys:
+        if discovered_illegal_keys := [
+            f'`{key}`'
+            for key in illegal_keys
+            if dataset_cfg.get(key) is not None
+        ]:
             raise ValueError(
-                'The dataset config sets a value for `hf_name` as well as the ' +\
-                f'following keys: {", ".join(discovered_illegal_keys)}.\n' +\
-                'Those keys are used when building from a streaming dataset, but ' +\
-                'setting `hf_name` instructs the dataset to build from a HuggingFace dataset.'
+                f'The dataset config sets a value for `hf_name` as well as the following keys: {", ".join(discovered_illegal_keys)}.\nThose keys are used when building from a streaming dataset, but setting `hf_name` instructs the dataset to build from a HuggingFace dataset.'
             )
     elif dataset_cfg.get('remote') is not None:
         # Using the streaming dataset codepath
         illegal_keys = ['hf_name', 'hf_kwargs', 'preprocessing_fn']
-        discovered_illegal_keys = []
-        for key in illegal_keys:
-            if dataset_cfg.get(key) is not None:
-                discovered_illegal_keys.append('`' + key + '`')
-        if discovered_illegal_keys:
+        if discovered_illegal_keys := [
+            f'`{key}`'
+            for key in illegal_keys
+            if dataset_cfg.get(key) is not None
+        ]:
             raise ValueError(
-                'The dataset config sets a value for `remote` as well as the ' +\
-                f'following keys: {", ".join(discovered_illegal_keys)}.\n' +\
-                'Those keys are used when building from a HuggingFace dataset, but ' +\
-                'setting `remote` instructs the dataset to build from a streaming dataset.'
+                f'The dataset config sets a value for `remote` as well as the following keys: {", ".join(discovered_illegal_keys)}.\nThose keys are used when building from a HuggingFace dataset, but setting `remote` instructs the dataset to build from a streaming dataset.'
             )
         if dataset_cfg.get('local') is None:
             raise ValueError(
@@ -325,9 +319,10 @@ def _build_hf_dataset_from_remote(
                         for ext in supported_extensions
                     ]
                     raise FileNotFoundError(
-                        f'Could not find a file with any of ' + \
-                        f'the supported extensions: {supported_extensions}\n' + \
-                        f'at {files_searched}'
+                        (
+                            f'Could not find a file with any of the supported extensions: {supported_extensions}\n'
+                            + f'at {files_searched}'
+                        )
                     ) from e
                 else:
                     log.debug(
@@ -462,55 +457,87 @@ if __name__ == '__main__':
                     for subseq in range(int(batch['sequence_id'][j].max()) + 1):
                         is_subseq = batch['sequence_id'][j] == subseq
                         print(
-                            '\033[93m{}\033[00m\n'.format('INPUT IDS:'),
-                            tokenizer.decode(batch['input_ids'][
-                                j,
-                                torch.logical_and(
-                                    is_subseq, batch['attention_mask'][j] ==
-                                    1)],
-                                             skip_special_tokens=False))
+                            f'\033[93mINPUT IDS:\033[00m\n',
+                            tokenizer.decode(
+                                batch['input_ids'][
+                                    j,
+                                    torch.logical_and(
+                                        is_subseq,
+                                        batch['attention_mask'][j] == 1,
+                                    ),
+                                ],
+                                skip_special_tokens=False,
+                            ),
+                        )
                         print(
-                            '\033[92m{}\033[00m\n'.format('CONTEXT:  '),
-                            tokenizer.decode(batch['input_ids'][
-                                j,
-                                torch.logical_and(
-                                    is_subseq, batch['bidirectional_mask'][j] ==
-                                    1)],
-                                             skip_special_tokens=False))
+                            f'\033[92mCONTEXT:  \033[00m\n',
+                            tokenizer.decode(
+                                batch['input_ids'][
+                                    j,
+                                    torch.logical_and(
+                                        is_subseq,
+                                        batch['bidirectional_mask'][j] == 1,
+                                    ),
+                                ],
+                                skip_special_tokens=False,
+                            ),
+                        )
                         print(
-                            '\033[91m{}\033[00m\n'.format('TARGET:   '),
-                            tokenizer.decode(batch['input_ids'][
-                                j,
-                                torch.logical_and(
-                                    is_subseq,
-                                    batch['labels'][j] != _HF_IGNORE_INDEX)],
-                                             skip_special_tokens=False))
+                            f'\033[91mTARGET:   \033[00m\n',
+                            tokenizer.decode(
+                                batch['input_ids'][
+                                    j,
+                                    torch.logical_and(
+                                        is_subseq,
+                                        batch['labels'][j] != _HF_IGNORE_INDEX,
+                                    ),
+                                ],
+                                skip_special_tokens=False,
+                            ),
+                        )
                 else:
                     print(
-                        '\033[93m{}\033[00m\n'.format('INPUT IDS:'),
+                        f'\033[93mINPUT IDS:\033[00m\n',
                         tokenizer.decode(
-                            batch['input_ids'][j,
-                                               batch['attention_mask'][j] == 1],
-                            skip_special_tokens=False))
+                            batch['input_ids'][
+                                j, batch['attention_mask'][j] == 1
+                            ],
+                            skip_special_tokens=False,
+                        ),
+                    )
                     print(
-                        '\033[92m{}\033[00m\n'.format('CONTEXT:  '),
-                        tokenizer.decode(batch['input_ids'][
-                            j, batch['bidirectional_mask'][j] == 1],
-                                         skip_special_tokens=False))
+                        f'\033[92mCONTEXT:  \033[00m\n',
+                        tokenizer.decode(
+                            batch['input_ids'][
+                                j, batch['bidirectional_mask'][j] == 1
+                            ],
+                            skip_special_tokens=False,
+                        ),
+                    )
                     print(
-                        '\033[91m{}\033[00m\n'.format('TARGET:   '),
-                        tokenizer.decode(batch['input_ids'][
-                            j, batch['labels'][j] != _HF_IGNORE_INDEX],
-                                         skip_special_tokens=False))
+                        f'\033[91mTARGET:   \033[00m\n',
+                        tokenizer.decode(
+                            batch['input_ids'][
+                                j, batch['labels'][j] != _HF_IGNORE_INDEX
+                            ],
+                            skip_special_tokens=False,
+                        ),
+                    )
             else:
                 print(
-                    '\033[92m{}\033[00m\n'.format('CONTEXT:  '),
+                    f'\033[92mCONTEXT:  \033[00m\n',
                     tokenizer.decode(
                         batch['input_ids'][j, batch['attention_mask'][j] == 1],
-                        skip_special_tokens=False))
+                        skip_special_tokens=False,
+                    ),
+                )
                 print(
-                    '\033[91m{}\033[00m\n'.format('TARGET:   '),
-                    tokenizer.decode(batch['labels'][
-                        j, batch['decoder_attention_mask'][j] == 1],
-                                     skip_special_tokens=False))
+                    f'\033[91mTARGET:   \033[00m\n',
+                    tokenizer.decode(
+                        batch['labels'][
+                            j, batch['decoder_attention_mask'][j] == 1
+                        ],
+                        skip_special_tokens=False,
+                    ),
+                )
         print('   ')

@@ -1,5 +1,6 @@
 """MosaicML LLM Foundry package setup."""
 
+
 import os
 import re
 
@@ -24,11 +25,11 @@ repo_version = expr.findall(content)[0]
 with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
 
+start_tag = '<!-- SETUPTOOLS_LONG_DESCRIPTION_HIDE_BEGIN -->'
+end_tag = '<!-- SETUPTOOLS_LONG_DESCRIPTION_HIDE_END -->'
 # Hide the content between <!-- SETUPTOOLS_LONG_DESCRIPTION_HIDE_BEGIN --> and
 # <!-- SETUPTOOLS_LONG_DESCRIPTION_HIDE_END --> tags in the README
 while True:
-    start_tag = '<!-- SETUPTOOLS_LONG_DESCRIPTION_HIDE_BEGIN -->'
-    end_tag = '<!-- SETUPTOOLS_LONG_DESCRIPTION_HIDE_END -->'
     start = long_description.find(start_tag)
     end = long_description.find(end_tag)
     if start == -1:
@@ -68,46 +69,36 @@ install_requires = [
     'huggingface-hub>=0.17.0,<1.0',
 ]
 
-extra_deps = {}
+extra_deps = {
+    'dev': [
+        'pre-commit>=2.18.1,<3',
+        'pytest>=7.2.1,<8',
+        'pytest_codeblocks>=0.16.1,<0.17',
+        'pytest-cov>=4,<5',
+        'pyright==1.1.256',
+        'toml>=0.10.2,<0.11',
+        'packaging>=21,<23',
+        'hf_transfer==0.1.3',
+    ],
+    'tensorboard': ['mosaicml[tensorboard]>=0.16.1,<0.17'],
+    'gpu': [
+        'flash-attn==1.0.9',
+        'mosaicml-turbo==0.0.4',
+        'xentropy-cuda-lib@git+https://github.com/HazyResearch/flash-attention.git@v1.0.9#subdirectory=csrc/xentropy',
+    ],
+    'peft': [
+        'loralib==0.1.1',
+        'bitsandbytes==0.39.1',
+        'scipy>=1.10.0,<=1.11.0',
+        'peft==0.4.0',
+    ],
+    'openai': ['openai==0.27.8', 'tiktoken==0.4.0'],
+}
 
-extra_deps['dev'] = [
-    'pre-commit>=2.18.1,<3',
-    'pytest>=7.2.1,<8',
-    'pytest_codeblocks>=0.16.1,<0.17',
-    'pytest-cov>=4,<5',
-    'pyright==1.1.256',
-    'toml>=0.10.2,<0.11',
-    'packaging>=21,<23',
-    'hf_transfer==0.1.3',
-]
-
-extra_deps['tensorboard'] = [
-    'mosaicml[tensorboard]>=0.16.1,<0.17',
-]
-
-extra_deps['gpu'] = [
-    'flash-attn==1.0.9',
-    'mosaicml-turbo==0.0.4',
-    # PyPI does not support direct dependencies, so we remove this line before uploading from PyPI
-    'xentropy-cuda-lib@git+https://github.com/HazyResearch/flash-attention.git@v1.0.9#subdirectory=csrc/xentropy',
-]
-
-extra_deps['peft'] = [
-    'loralib==0.1.1',  # lora core
-    'bitsandbytes==0.39.1',  # 8bit
-    'scipy>=1.10.0,<=1.11.0',  # bitsandbytes dependency; TODO: eliminate when incorporated to bitsandbytes
-    # TODO: pin peft when it stabilizes.
-    # PyPI does not support direct dependencies, so we remove this line before uploading from PyPI
-    'peft==0.4.0',
-]
-
-extra_deps['openai'] = [
-    'openai==0.27.8',
-    'tiktoken==0.4.0',
-]
-extra_deps['all-cpu'] = set(
-    dep for key, deps in extra_deps.items() for dep in deps if 'gpu' not in key)
-extra_deps['all'] = set(dep for deps in extra_deps.values() for dep in deps)
+extra_deps['all-cpu'] = {
+    dep for key, deps in extra_deps.items() for dep in deps if 'gpu' not in key
+}
+extra_deps['all'] = {dep for deps in extra_deps.values() for dep in deps}
 
 setup(
     name=_PACKAGE_NAME,

@@ -71,8 +71,9 @@ class InferenceAPIEvalWrapper(ComposerModel):
                 num_classes=self.tokenizer.vocab_size)
             for i in range(len(expected_cont_tokens)):
                 # decode one token at a time
-                prompt = self.tokenizer.decode(tokens[:cont_idxs[0]] +
-                                               expected_cont_tokens[0:i])
+                prompt = self.tokenizer.decode(
+                    (tokens[: cont_idxs[0]] + expected_cont_tokens[:i])
+                )
                 next_logit_tensor = self.get_next_token_logit_tensor(prompt)
                 if next_logit_tensor is None:
                     continue

@@ -113,9 +113,7 @@ class TiktokenTokenizerWrapper(PreTrainedTokenizer):
             raise ValueError(
                 f'Expected a string input to _tokenize but got {type(text)}.')
 
-        tokens = [t for t in self.encoding.encode(text, allowed_special='all')]
-
-        return tokens
+        return list(self.encoding.encode(text, allowed_special='all'))
 
     def _convert_token_to_id(self, token: Union[int, str]) -> int:
         """Converts a token (str) into an id using the vocab."""
@@ -179,17 +177,10 @@ class TiktokenTokenizerWrapper(PreTrainedTokenizer):
             self,
             token_ids_0: List[int],
             token_ids_1: Optional[List[int]] = None) -> List[int]:
-        if self.add_bos_token:
-            bos_token_ids = [self.bos_token_id]
-        else:
-            bos_token_ids = []
-
+        bos_token_ids = [self.bos_token_id] if self.add_bos_token else []
         output = bos_token_ids + token_ids_0
 
-        if token_ids_1 is None:
-            return output
-
-        return output + bos_token_ids + token_ids_1
+        return output if token_ids_1 is None else output + bos_token_ids + token_ids_1
 
     def get_special_tokens_mask(
             self,
